@@ -25,7 +25,8 @@
 </p>
 
 <p align="center">
-  Gorilla Optimizer is a simple yet useful optimization mod for Gorilla Tag with tons of configuration.<br> <br>
+  Gorilla Optimizer is a simple yet useful optimization mod for Gorilla Tag with tons of configuration.<br>
+  I spent tons of time researching on unitys build in optimization options and optimizing the mod itself, so please enjoy.<br> <br>
   Do you like this mod? If so, please let me know!  
   <a href="https://sevvy-wevvy.com/discord">Discord</a>
 </p>
