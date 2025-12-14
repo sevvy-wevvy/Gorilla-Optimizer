@@ -1,15 +1,15 @@
-<h1 align="center">🔮 Sevs Stupid Gorilla Tag Addons (SSGTA) 🔮</h1>
+<h1 align="center">⏩ Gorilla Optimizer ⏩</h1>
 
 <p align="center">
-<b>A bunch of fun and stupid Gorilla Tag Addons.</b>
+<b>A optimization mod for Gorilla Tag to make the game smoother with lots of configuration.</b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/sevvy-wevvy/Sevs-Stupid-Gorilla-Tag-Addons/releases/latest">
-    <img src="https://img.shields.io/github/downloads/sevvy-wevvy/Sevs-Stupid-Gorilla-Tag-Addons/total?label=Downloads&style=for-the-badge" alt="Downloads">
+  <a href="https://github.com/sevvy-wevvy/Gorilla-Optimizer/releases/latest">
+    <img src="https://img.shields.io/github/downloads/sevvy-wevvy/Gorilla-Optimizer/total?label=Downloads&style=for-the-badge" alt="Downloads">
   </a>
-  <a href="https://github.com/sevvy-wevvy/Sevs-Stupid-Gorilla-Tag-Addons/releases/latest">
-    <img src="https://img.shields.io/github/v/release/sevvy-wevvy/Sevs-Stupid-Gorilla-Tag-Addons?label=Version&style=for-the-badge&color=red" alt="Version">
+  <a href="https://github.com/sevvy-wevvy/Gorilla-Optimizer/releases/latest">
+    <img src="https://img.shields.io/github/v/release/sevvy-wevvy/Gorilla-Optimizer?label=Version&style=for-the-badge&color=red" alt="Version">
   </a>
   <a href="https://sevvy-wevvy.com/discord">
     <img src="https://img.shields.io/discord/1398944180079689728?label=Discord&style=for-the-badge" alt="Discord">
@@ -25,8 +25,7 @@
 </p>
 
 <p align="center">
-  SSGAT is rideled with fun and simple mods such as NameTags, to mod checkers that tell you every mod someone has.<br>
-  Aswell i only work on this when i get random silly ideas that arnt full mods, so dont expect consistant updates.<br> <br>
+  Gorilla Optimizer is a simple yet useful optimization mod for Gorilla Tag with tons of configuration.<br> <br>
   Do you like this mod? If so, please let me know!  
   <a href="https://sevvy-wevvy.com/discord">Discord</a>
 </p>
@@ -36,36 +35,7 @@
   <img src="https://img.shields.io/badge/Several%20Bees-yellow?style=for-the-badge&label=Depends%20On&labelColor=grey" 
        alt="Depends On Several Bees" height="19">
 </a>
-
-<a href="https://github.com/developer9998/Utilla" target="_blank" style="margin-left:10px;">
-  <img src="https://img.shields.io/badge/Utilla-ref?style=for-the-badge&label=Depends%20On&labelColor=grey" 
-       alt="Depends On Several Bees" height="19">
-</a>
 </p>
-
-<details>
-<summary align="center"><b>📜 All Fetures 📜</b></summary>
-
-<p align="center">
-  
-<details>
-<summary align="center">NameTags</summary>
-
-<p align="center">
-Simple nametags above users heads.
-</p>
-</details>
-
-<details>
-<summary align="center">User Data</summary>
-
-<p align="center">
-Lets you choose a person, see their: Join date, Platform, Detectable Mods, Special Cosmetics, and more.
-</p>
-</details>
-
-</p>
-</details>
 
 <details>
 <summary align="center"><b>🛠 Pull Requests 🛠</b></summary>
