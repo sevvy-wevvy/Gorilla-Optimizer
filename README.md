@@ -89,7 +89,8 @@ As long as it works, its very likley to get accepted.
 <p align="center">
 I accept donations over few platforms, below are where you can help support my projects and more.<br>
 <b>Patreon</b> - https://sevvy-wevvy.com/patreon<br>
-<b>Ko-fi</b> - https://sevvy-wevvy.com/kofi
+<b>Ko-fi</b> - https://sevvy-wevvy.com/kofi<br>
+<b>Throne</b> - https://sevvy-wevvy.com/throne
 </p>
 </details>
 
