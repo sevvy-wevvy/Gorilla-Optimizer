@@ -1,8 +1,10 @@
-﻿using BepInEx;
+using BepInEx;
 using UnityEngine;
 using UnityEngine.XR;
 using SeveralBees;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
+using Unity.Jobs;
 
 namespace GorillaOptimizer
 {
@@ -16,10 +18,11 @@ namespace GorillaOptimizer
         void Awake()
         {
             Instance = this;
+            SeveralBees.Plugin.Instance.Startup.Add(InstanceStartThing);
         }
 
         [System.Obsolete]
-        void Start()
+        void InstanceStartThing()
         {
             MainPageSbToken = Api.Instance.GenerateToken("<color=yellow>Gorilla Optimizer</color>", true, "Main");
 
@@ -38,7 +41,21 @@ namespace GorillaOptimizer
                 T("NoVSync","No VSync",()=>QualitySettings.vSyncCount=0,()=>QualitySettings.vSyncCount=1),
                 T("CapFPS","Cap FPS 60",()=>{Application.targetFrameRate=60;QualitySettings.vSyncCount=0;},()=>Application.targetFrameRate=-1),
                 T("LowRenderScale","Low XR Scale",()=>XRSettings.eyeTextureResolutionScale=0.7f,()=>XRSettings.eyeTextureResolutionScale=1f),
-                T("UltraLowRenderScale","Ultra Low XR Scale",()=>XRSettings.eyeTextureResolutionScale=0.55f,()=>XRSettings.eyeTextureResolutionScale=1f)
+                T("UltraLowRenderScale","Ultra Low XR Scale",()=>XRSettings.eyeTextureResolutionScale=0.55f,()=>XRSettings.eyeTextureResolutionScale=1f),
+
+                T("DisableMotionVectors","Disable Motion Vectors",DisableMotionVectors,EnableMotionVectors),
+                T("LowPhysicsRate","Low Physics Rate",LowPhysicsRate,NormalPhysicsRate),
+                T("CullRendererShadows","Cull Renderer Shadows",CullRendererShadows,RestoreRendererShadows),
+                T("DisablePostProcessing","Disable Post Processing",DisablePostProcessing,EnablePostProcessing),
+                T("AggressiveGC","Aggressive GC",AggressiveGC,NormalGC),
+
+                T("ForceOcclusion","Force Occlusion Culling",ForceOcclusion,RestoreOcclusion),
+                T("DisableShaderWarmup","Disable Shader Warmup",DisableShaderWarmup,EnableShaderWarmup),
+                T("OptimizeMeshes","Optimize Mesh Upload",OptimizeMeshes,RestoreMeshes),
+                T("ReduceJobThreads","Reduce Job Threads",ReduceJobThreads,RestoreJobThreads),
+                T("TightCullMasks","Tight Camera Culling",TightCullMasks,RestoreCullMasks),
+                T("NoFixedCatchup","Disable Fixed Catchup",DisableFixedCatchup,EnableFixedCatchup),
+                T("LowBGLoad","Low BG Loading Priority",LowBGLoad,NormalBGLoad)
             });
 
             ApplyAll();
@@ -63,7 +80,14 @@ namespace GorillaOptimizer
 
         IEnumerable<string> PlayerPrefsKeys()
         {
-            return new string[] { "LowTextures", "NoShadows", "LowShadowRes", "ZeroShadowDist", "NoAA", "NoAniso", "LowPixelLights", "NoSoftParticles", "LowLODBias", "NoReflections", "NoVSync", "CapFPS", "LowRenderScale", "UltraLowRenderScale" };
+            return new string[]
+            {
+                "LowTextures","NoShadows","LowShadowRes","ZeroShadowDist","NoAA","NoAniso","LowPixelLights",
+                "NoSoftParticles","LowLODBias","NoReflections","NoVSync","CapFPS","LowRenderScale","UltraLowRenderScale",
+                "DisableMotionVectors","LowPhysicsRate","CullRendererShadows","DisablePostProcessing","AggressiveGC",
+                "ForceOcclusion","DisableShaderWarmup","OptimizeMeshes","ReduceJobThreads","TightCullMasks",
+                "NoFixedCatchup","LowBGLoad"
+            };
         }
 
         void ApplyKey(string k)
@@ -82,6 +106,94 @@ namespace GorillaOptimizer
             if (k == "CapFPS") { Application.targetFrameRate = 60; QualitySettings.vSyncCount = 0; }
             if (k == "LowRenderScale") XRSettings.eyeTextureResolutionScale = 0.7f;
             if (k == "UltraLowRenderScale") XRSettings.eyeTextureResolutionScale = 0.55f;
+
+            if (k == "DisableMotionVectors") DisableMotionVectors();
+            if (k == "LowPhysicsRate") LowPhysicsRate();
+            if (k == "CullRendererShadows") CullRendererShadows();
+            if (k == "DisablePostProcessing") DisablePostProcessing();
+            if (k == "AggressiveGC") AggressiveGC();
+            if (k == "ForceOcclusion") ForceOcclusion();
+            if (k == "DisableShaderWarmup") DisableShaderWarmup();
+            if (k == "OptimizeMeshes") OptimizeMeshes();
+            if (k == "ReduceJobThreads") ReduceJobThreads();
+            if (k == "TightCullMasks") TightCullMasks();
+            if (k == "NoFixedCatchup") DisableFixedCatchup();
+            if (k == "LowBGLoad") LowBGLoad();
+        }
+
+        void ForceOcclusion() { foreach (var cam in Camera.allCameras) cam.useOcclusionCulling = true; }
+        void RestoreOcclusion() { foreach (var cam in Camera.allCameras) cam.useOcclusionCulling = false; }
+
+        void DisableShaderWarmup() { Shader.globalMaximumLOD = 300; }
+        void EnableShaderWarmup() { Shader.globalMaximumLOD = 600; }
+
+        void OptimizeMeshes() { foreach (var m in Resources.FindObjectsOfTypeAll<Mesh>()) m.UploadMeshData(true); }
+        void RestoreMeshes() { }
+
+        void ReduceJobThreads() { JobsUtility.JobWorkerCount = 1; }
+        void RestoreJobThreads() { JobsUtility.JobWorkerCount = SystemInfo.processorCount - 1; }
+
+        void TightCullMasks()
+        {
+            foreach (var cam in Camera.allCameras)
+                cam.cullingMask &= ~(1 << LayerMask.NameToLayer("UI"));
+        }
+
+        void RestoreCullMasks()
+        {
+            foreach (var cam in Camera.allCameras) cam.cullingMask = -1;
+        }
+
+        void DisableFixedCatchup() { Time.maximumDeltaTime = 0.05f; }
+        void EnableFixedCatchup() { Time.maximumDeltaTime = 0.333f; }
+
+        void LowBGLoad() { Application.backgroundLoadingPriority = ThreadPriority.Low; }
+        void NormalBGLoad() { Application.backgroundLoadingPriority = ThreadPriority.Normal; }
+
+        void DisableMotionVectors() { foreach (var cam in Camera.allCameras) cam.depthTextureMode = DepthTextureMode.None; }
+        void EnableMotionVectors() { foreach (var cam in Camera.allCameras) cam.depthTextureMode = DepthTextureMode.Depth; }
+
+        void LowPhysicsRate()
+        {
+            Time.fixedDeltaTime = 0.0333f;
+            Physics.defaultSolverIterations = 4;
+            Physics.defaultSolverVelocityIterations = 1;
+        }
+
+        void NormalPhysicsRate()
+        {
+            Time.fixedDeltaTime = 0.02f;
+            Physics.defaultSolverIterations = 6;
+            Physics.defaultSolverVelocityIterations = 1;
+        }
+
+        void CullRendererShadows() { foreach (var r in FindObjectsOfType<Renderer>()) r.shadowCastingMode = ShadowCastingMode.Off; }
+        void RestoreRendererShadows() { foreach (var r in FindObjectsOfType<Renderer>()) r.shadowCastingMode = ShadowCastingMode.On; }
+
+        void DisablePostProcessing()
+        {
+            foreach (var b in FindObjectsOfType<Behaviour>()) if (b.GetType().Name.Contains("Post")) b.enabled = false;
+        }
+
+        void EnablePostProcessing()
+        {
+            foreach (var b in FindObjectsOfType<Behaviour>()) if (b.GetType().Name.Contains("Post")) b.enabled = true;
+        }
+
+        void AggressiveGC()
+        {
+            System.GC.Collect();
+            Application.lowMemory += ForceGC;
+        }
+
+        void NormalGC()
+        {
+            Application.lowMemory -= ForceGC;
+        }
+
+        void ForceGC()
+        {
+            System.GC.Collect();
         }
 
         internal void SaveEnabled(bool e, string k)
