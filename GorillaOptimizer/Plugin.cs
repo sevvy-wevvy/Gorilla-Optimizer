@@ -4,11 +4,10 @@ using UnityEngine.XR;
 using SeveralBees;
 using System.Collections.Generic;
 using UnityEngine.Rendering;
-using Unity.Jobs;
 
 namespace GorillaOptimizer
 {
-    [BepInPlugin("com.sev.gorillatag.GorillaOptimizer", "GorillaOptimizer", "1.0.0")]
+    [BepInPlugin("com.sev.gorillatag.GorillaOptimizer", "GorillaOptimizer", "1.1.0")]
     [BepInDependency("com.Sev.gorillatag.SeveralBees", "1.0.0")]
     public class Plugin : BaseUnityPlugin
     {
@@ -49,13 +48,9 @@ namespace GorillaOptimizer
                 T("DisablePostProcessing","Disable Post Processing",DisablePostProcessing,EnablePostProcessing),
                 T("AggressiveGC","Aggressive GC",AggressiveGC,NormalGC),
 
-                T("ForceOcclusion","Force Occlusion Culling",ForceOcclusion,RestoreOcclusion),
-                T("DisableShaderWarmup","Disable Shader Warmup",DisableShaderWarmup,EnableShaderWarmup),
-                T("OptimizeMeshes","Optimize Mesh Upload",OptimizeMeshes,RestoreMeshes),
-                T("ReduceJobThreads","Reduce Job Threads",ReduceJobThreads,RestoreJobThreads),
-                T("TightCullMasks","Tight Camera Culling",TightCullMasks,RestoreCullMasks),
-                T("NoFixedCatchup","Disable Fixed Catchup",DisableFixedCatchup,EnableFixedCatchup),
-                T("LowBGLoad","Low BG Loading Priority",LowBGLoad,NormalBGLoad)
+                T("NoParticles","No Particles",DisableParticles,EnableParticles),
+                T("LowParticleCount","Low Particle Count",LowParticleCount,NormalParticleCount),
+                T("PauseOffscreenParticles","Pause Offscreen Particles",PauseOffscreenParticles,ResumeOffscreenParticles)
             });
 
             ApplyAll();
@@ -85,8 +80,7 @@ namespace GorillaOptimizer
                 "LowTextures","NoShadows","LowShadowRes","ZeroShadowDist","NoAA","NoAniso","LowPixelLights",
                 "NoSoftParticles","LowLODBias","NoReflections","NoVSync","CapFPS","LowRenderScale","UltraLowRenderScale",
                 "DisableMotionVectors","LowPhysicsRate","CullRendererShadows","DisablePostProcessing","AggressiveGC",
-                "ForceOcclusion","DisableShaderWarmup","OptimizeMeshes","ReduceJobThreads","TightCullMasks",
-                "NoFixedCatchup","LowBGLoad"
+                "NoParticles","LowParticleCount","PauseOffscreenParticles"
             };
         }
 
@@ -112,43 +106,66 @@ namespace GorillaOptimizer
             if (k == "CullRendererShadows") CullRendererShadows();
             if (k == "DisablePostProcessing") DisablePostProcessing();
             if (k == "AggressiveGC") AggressiveGC();
-            if (k == "ForceOcclusion") ForceOcclusion();
-            if (k == "DisableShaderWarmup") DisableShaderWarmup();
-            if (k == "OptimizeMeshes") OptimizeMeshes();
-            if (k == "ReduceJobThreads") ReduceJobThreads();
-            if (k == "TightCullMasks") TightCullMasks();
-            if (k == "NoFixedCatchup") DisableFixedCatchup();
-            if (k == "LowBGLoad") LowBGLoad();
+
+            if (k == "NoParticles") DisableParticles();
+            if (k == "LowParticleCount") LowParticleCount();
+            if (k == "PauseOffscreenParticles") PauseOffscreenParticles();
         }
 
-        void ForceOcclusion() { foreach (var cam in Camera.allCameras) cam.useOcclusionCulling = true; }
-        void RestoreOcclusion() { foreach (var cam in Camera.allCameras) cam.useOcclusionCulling = false; }
-
-        void DisableShaderWarmup() { Shader.globalMaximumLOD = 300; }
-        void EnableShaderWarmup() { Shader.globalMaximumLOD = 600; }
-
-        void OptimizeMeshes() { foreach (var m in Resources.FindObjectsOfTypeAll<Mesh>()) m.UploadMeshData(true); }
-        void RestoreMeshes() { }
-
-        void ReduceJobThreads() { JobsUtility.JobWorkerCount = 1; }
-        void RestoreJobThreads() { JobsUtility.JobWorkerCount = SystemInfo.processorCount - 1; }
-
-        void TightCullMasks()
+        void DisableParticles()
         {
-            foreach (var cam in Camera.allCameras)
-                cam.cullingMask &= ~(1 << LayerMask.NameToLayer("UI"));
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                var em = ps.emission;
+                em.enabled = false;
+                ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                var r = ps.GetComponent<ParticleSystemRenderer>();
+                if (r != null) r.enabled = false;
+            }
         }
 
-        void RestoreCullMasks()
+        void EnableParticles()
         {
-            foreach (var cam in Camera.allCameras) cam.cullingMask = -1;
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                var em = ps.emission;
+                em.enabled = true;
+                var r = ps.GetComponent<ParticleSystemRenderer>();
+                if (r != null) r.enabled = true;
+            }
         }
 
-        void DisableFixedCatchup() { Time.maximumDeltaTime = 0.05f; }
-        void EnableFixedCatchup() { Time.maximumDeltaTime = 0.333f; }
+        void LowParticleCount()
+        {
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                var main = ps.main;
+                if (main.maxParticles > 32) main.maxParticles = 32;
+            }
+        }
 
-        void LowBGLoad() { Application.backgroundLoadingPriority = ThreadPriority.Low; }
-        void NormalBGLoad() { Application.backgroundLoadingPriority = ThreadPriority.Normal; }
+        void NormalParticleCount()
+        {
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                var main = ps.main;
+                main.maxParticles = 1000;
+            }
+        }
+
+        void PauseOffscreenParticles()
+        {
+            foreach (var ps in FindObjectsOfType<ParticleSystem>())
+            {
+                var r = ps.GetComponent<Renderer>();
+                if (r != null && !r.isVisible) ps.Pause();
+            }
+        }
+
+        void ResumeOffscreenParticles()
+        {
+            foreach (var ps in FindObjectsOfType<ParticleSystem>()) ps.Play();
+        }
 
         void DisableMotionVectors() { foreach (var cam in Camera.allCameras) cam.depthTextureMode = DepthTextureMode.None; }
         void EnableMotionVectors() { foreach (var cam in Camera.allCameras) cam.depthTextureMode = DepthTextureMode.Depth; }
